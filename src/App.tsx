@@ -16,12 +16,14 @@ import ReactMarkdown from "react-markdown";
 
 declare global {
   interface Window {
-    aistudio: {
+    aistudio?: {
       hasSelectedApiKey: () => Promise<boolean>;
       openSelectKey: () => Promise<void>;
     };
   }
 }
+
+const isAiStudio = () => typeof window !== "undefined" && !!window.aistudio;
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
@@ -31,22 +33,45 @@ export default function App() {
   const [currentFile, setCurrentFile] = useState("main.ts");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   
   const serviceRef = useRef<GeminiLiveService | null>(null);
+  const resolvedApiKey = useRef<string>("");
 
   useEffect(() => {
     checkApiKey();
   }, []);
 
   const checkApiKey = async () => {
-    const hasKey = await window.aistudio.hasSelectedApiKey();
-    setHasApiKey(hasKey);
+    if (isAiStudio()) {
+      const hasKey = await window.aistudio!.hasSelectedApiKey();
+      setHasApiKey(hasKey);
+    } else if (process.env.GEMINI_API_KEY) {
+      resolvedApiKey.current = process.env.GEMINI_API_KEY;
+      setHasApiKey(true);
+    } else {
+      setShowApiKeyInput(true);
+    }
+  };
+
+  const handleApiKeySubmit = () => {
+    const key = apiKeyInput.trim();
+    if (key && key.startsWith("AIza") && key.length > 20) {
+      resolvedApiKey.current = key;
+      setHasApiKey(true);
+      setShowApiKeyInput(false);
+    }
   };
 
   const handleConnect = async () => {
     if (!hasApiKey) {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true);
+      if (isAiStudio()) {
+        await window.aistudio!.openSelectKey();
+        setHasApiKey(true);
+      } else {
+        setShowApiKeyInput(true);
+      }
       return;
     }
 
@@ -56,6 +81,7 @@ export default function App() {
       setStatus("Disconnected");
     } else {
       try {
+        const apiKey = isAiStudio() ? undefined : resolvedApiKey.current;
         serviceRef.current = new GeminiLiveService(
           (msg) => {
             if (msg.type === "text") {
@@ -67,7 +93,8 @@ export default function App() {
               setTimeout(() => setStatus("Connected"), 2000);
             }
           },
-          (status) => setStatus(status)
+          (status) => setStatus(status),
+          apiKey
         );
         await serviceRef.current.connect();
         setIsConnected(true);
@@ -128,7 +155,7 @@ export default function App() {
                 </div>
                 {!hasApiKey && (
                   <button 
-                    onClick={() => window.aistudio.openSelectKey()}
+                    onClick={() => isAiStudio() ? window.aistudio!.openSelectKey() : setShowApiKeyInput(true)}
                     className="text-[10px] text-brand-yellow hover:underline flex items-center gap-1"
                   >
                     <Key className="w-3 h-3" /> Setup Key
@@ -256,6 +283,58 @@ export default function App() {
           </div>
         </footer>
       </div>
+
+      {/* API Key Modal */}
+      <AnimatePresence>
+        {showApiKeyInput && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass border border-white/10 rounded-2xl p-8 w-full max-w-md"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-brand-yellow rounded flex items-center justify-center">
+                  <Key className="w-5 h-5 text-brand-black" />
+                </div>
+                <h2 className="text-xl font-bold text-brand-yellow">Enter API Key</h2>
+              </div>
+              <p className="text-sm text-white/60 mb-6">
+                Enter your Gemini API key to use the voice agent. You can get one from{" "}
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-yellow underline"
+                >
+                  Google AI Studio
+                </a>.
+              </p>
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleApiKeySubmit()}
+                placeholder="AIza..."
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-brand-yellow/50 mb-4"
+              />
+              <button
+                onClick={handleApiKeySubmit}
+                disabled={!apiKeyInput.trim().startsWith("AIza") || apiKeyInput.trim().length <= 20}
+                className="w-full py-3 rounded-xl font-bold bg-brand-yellow text-brand-black hover:bg-brand-yellow/90 glow-yellow disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                Save & Continue
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
