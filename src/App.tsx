@@ -39,14 +39,23 @@ export default function App() {
   }, []);
 
   const checkApiKey = async () => {
-    const hasKey = await window.aistudio.hasSelectedApiKey();
-    setHasApiKey(hasKey);
+    if (window.aistudio) {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      setHasApiKey(hasKey);
+    } else {
+      // Running locally: API key comes from GEMINI_API_KEY env var via Vite
+      setHasApiKey(!!process.env.GEMINI_API_KEY);
+    }
   };
 
   const handleConnect = async () => {
     if (!hasApiKey) {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true);
+      if (window.aistudio) {
+        await window.aistudio.openSelectKey();
+        setHasApiKey(true);
+      } else {
+        setStatus("Error: Set GEMINI_API_KEY in .env.local");
+      }
       return;
     }
 
@@ -126,7 +135,7 @@ export default function App() {
                   <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                   <span className="text-xs font-mono uppercase tracking-tighter opacity-60">{status}</span>
                 </div>
-                {!hasApiKey && (
+                {!hasApiKey && window.aistudio && (
                   <button 
                     onClick={() => window.aistudio.openSelectKey()}
                     className="text-[10px] text-brand-yellow hover:underline flex items-center gap-1"
