@@ -9,54 +9,38 @@
 }
 
 :root {
-  --bg: #000000;
-  --ink: #FFFFFF;
-  --accent: #FBBF24;
+  --vscode-bg: #1e1e1e;
+  --vscode-sidebar: #252526;
+  --vscode-activity: #333333;
+  --vscode-panel: #1e1e1e;
+  --vscode-border: #3c3c3c;
+  --vscode-text: #cccccc;
+  --vscode-text-active: #ffffff;
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--ink);
+  background-color: var(--vscode-bg);
+  color: var(--vscode-text);
   font-family: var(--font-sans);
   overflow: hidden;
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glow-yellow {
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
-}
-
-.glow-yellow-strong {
-  box-shadow: 0 0 40px rgba(251, 191, 36, 0.5);
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 0.5; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-.pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
-}
-
 .markdown-body {
-  color: #e6edf3;
+  color: #d4d4d4;
   font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .markdown-body pre {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: #1e1e1e !important;
   padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  border: none;
   overflow-x: auto;
 }
 
 .markdown-body code {
-  color: var(--color-brand-yellow);
+  color: #ce9178;
 }
+
