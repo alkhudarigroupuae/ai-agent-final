@@ -1,7 +1,5 @@
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 
-const API_KEY = process.env.GEMINI_API_KEY;
-
 export class GeminiLiveService {
   private ai: GoogleGenAI;
   private session: any;
@@ -10,9 +8,10 @@ export class GeminiLiveService {
   private onMessageCallback: (msg: any) => void;
   private onStatusCallback: (status: string) => void;
 
-  constructor(onMessage: (msg: any) => void, onStatus: (status: string) => void) {
-    if (!API_KEY) throw new Error("GEMINI_API_KEY is missing");
-    this.ai = new GoogleGenAI({ apiKey: API_KEY });
+  constructor(onMessage: (msg: any) => void, onStatus: (status: string) => void, apiKey?: string) {
+    const key = apiKey || process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("GEMINI_API_KEY is missing");
+    this.ai = new GoogleGenAI({ apiKey: key });
     this.onMessageCallback = onMessage;
     this.onStatusCallback = onStatus;
   }
