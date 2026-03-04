@@ -1,0 +1,5 @@
+{
+  "name": "EcommerceCo Voice Agent",
+  "description": "A smart voice-controlled agent for code generation and deployment, integrated with Google Gemini Live API.",
+  "requestFramePermissions": ["microphone"]
+}
