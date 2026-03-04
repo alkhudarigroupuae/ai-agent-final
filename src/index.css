@@ -4,6 +4,13 @@
   --color-brand-black: #000000;
   --color-brand-yellow: #FBBF24; /* Amber 400 */
   --color-brand-gold: #D97706; /* Amber 600 */
+  --color-vscode-bg: #1e1e1e;
+  --color-vscode-sidebar: #252526;
+  --color-vscode-activity: #333333;
+  --color-vscode-panel: #1e1e1e;
+  --color-vscode-border: #3c3c3c;
+  --color-vscode-text: #cccccc;
+  --color-vscode-text-active: #ffffff;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
