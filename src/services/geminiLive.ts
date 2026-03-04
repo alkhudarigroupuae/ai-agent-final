@@ -125,8 +125,14 @@ export class GeminiLiveService {
           pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
         }
         
-        // Base64 encode
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
+        // Base64 encode in chunks to avoid call stack overflow with large buffers
+        const bytes = new Uint8Array(pcmData.buffer);
+        let binaryString = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binaryString += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+        }
+        const base64Data = btoa(binaryString);
         
         if (this.session) {
           this.session.sendRealtimeInput({
