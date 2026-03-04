@@ -51,3 +51,11 @@ body {
   color: #ce9178;
 }
 
+.editor-container textarea {
+  outline: none !important;
+}
+
+.editor-container pre {
+  margin: 0 !important;
+}
+

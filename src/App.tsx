@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 import { GeminiLiveService } from "./services/geminiLive";
 import ReactMarkdown from "react-markdown";
+import { GoogleGenAI } from "@google/genai";
+import Editor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-json';
+import 'prismjs/themes/prism-tomorrow.css';
 
 declare global {
   interface Window {
@@ -35,6 +43,7 @@ export default function App() {
   const [files, setFiles] = useState<string[]>(["main.ts", "App.tsx", "index.css", "server.ts", "package.json", "vite.config.ts"]);
   const [editingTask, setEditingTask] = useState<{ id: string; text: string; description: string; completed: boolean } | null>(null);
   const [projects, setProjects] = useState<{ id: string; name: string; timestamp: number; data: any }[]>([]);
+  const [isAutocompleting, setIsAutocompleting] = useState(false);
   const [tasks, setTasks] = useState<{ id: string; text: string; description: string; completed: boolean }[]>([
     { id: '1', text: 'Initialize project structure', description: 'Set up the basic React + Vite + Tailwind project structure.', completed: true },
     { id: '2', text: 'Configure Gemini Live API', description: 'Integrate the Gemini Live API for real-time voice and tool calls.', completed: true },
@@ -167,6 +176,40 @@ export default function App() {
     };
     setTasks(prev => [...prev, newTask]);
     setEditingTask(newTask);
+  };
+
+  const handleAutocomplete = async () => {
+    if (!code || isAutocompleting) return;
+    setIsAutocompleting(true);
+    setStatus("Generating completion...");
+    
+    try {
+      const apiKey = process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || '';
+      if (!apiKey) throw new Error("API key missing");
+      
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are an expert developer. Complete the following code for the file ${currentFile}. 
+      Only output the exact code completion that should follow the provided code. Do not include markdown formatting, explanations, or the original code.
+      
+      Current code:
+      ${code}`;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+      
+      if (response.text) {
+        setCode(prev => prev + response.text);
+        setStatus("Completion added");
+      }
+    } catch (error: any) {
+      console.error("Autocomplete error:", error);
+      setStatus("Autocomplete failed");
+    } finally {
+      setIsAutocompleting(false);
+      setTimeout(() => setStatus(isConnected ? "Connected" : "Ready"), 2000);
+    }
   };
 
   return (
@@ -406,11 +449,45 @@ export default function App() {
           </div>
 
           {/* Code Content */}
-          <div className="flex-1 overflow-auto p-4 font-mono text-[14px] leading-relaxed">
+          <div className="flex-1 overflow-auto p-4 font-mono text-[14px] leading-relaxed relative group">
             {code ? (
-              <div className="markdown-body">
-                <ReactMarkdown>{`\`\`\`${currentFile.split('.').pop() || 'tsx'}\n${code}\n\`\`\``}</ReactMarkdown>
-              </div>
+              <>
+                <button 
+                  onClick={handleAutocomplete}
+                  disabled={isAutocompleting}
+                  className="absolute top-4 right-4 z-10 bg-brand-yellow text-brand-black px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  <Zap className="w-3 h-3" />
+                  {isAutocompleting ? "Completing..." : "Autocomplete"}
+                </button>
+                <div 
+                  className="bg-vscode-bg/80 rounded border border-vscode-border/50 min-h-full"
+                  onKeyDown={(e) => {
+                    if (e.ctrlKey && e.key === ' ') {
+                      e.preventDefault();
+                      handleAutocomplete();
+                    }
+                  }}
+                >
+                  <Editor
+                    value={code}
+                    onValueChange={code => setCode(code)}
+                    highlight={code => {
+                      const ext = currentFile.split('.').pop() || 'typescript';
+                      const lang = Prism.languages[ext] || Prism.languages.typescript;
+                      return Prism.highlight(code, lang, ext);
+                    }}
+                    padding={16}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 14,
+                      backgroundColor: 'transparent',
+                      minHeight: '100%'
+                    }}
+                    className="editor-container"
+                  />
+                </div>
+              </>
             ) : (
               <div className="text-[#858585] h-full flex items-center justify-center flex-col">
                 <Code className="w-16 h-16 mb-4 opacity-20" />
