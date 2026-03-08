@@ -24,7 +24,7 @@
     }
 
     if (brandName && config.brandName) {
-      brandName.innerHTML = `${config.brandName.replace('.ai', '<span>.ai</span>')}`;
+      brandName.textContent = config.brandName;
     }
 
     if (brandLogo && config.brandLogoUrl) {
@@ -66,6 +66,11 @@
   const askAgent = async (query) => {
     addMessage(query, 'user');
     try {
+      if (!config.apiBase) {
+        addMessage('Assistant endpoint is not configured yet.', 'bot');
+        return;
+      }
+
       const response = await fetch(`${config.apiBase}/search-product`, {
         method: 'POST',
         headers: {
@@ -74,6 +79,9 @@
         },
         body: JSON.stringify({ query })
       });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
       const data = await response.json();
       const reply = data.reply || 'I could not find matching parts right now.';
       addMessage(reply, 'bot');

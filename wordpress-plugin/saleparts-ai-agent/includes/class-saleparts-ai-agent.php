@@ -19,6 +19,7 @@ class SaleParts_AI_Agent {
     public function run(): void {
         add_action('admin_menu', [$this->admin, 'register_menu']);
         add_action('admin_init', [$this->admin, 'register_settings']);
+        add_action('admin_post_saleparts_ai_export_questions', [$this->admin, 'handle_export_questions_csv']);
         add_filter('option_page_capability_saleparts_ai_agent', [$this->admin, 'option_group_capability']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_public_assets']);
         add_action('rest_api_init', [$this->api, 'register_routes']);

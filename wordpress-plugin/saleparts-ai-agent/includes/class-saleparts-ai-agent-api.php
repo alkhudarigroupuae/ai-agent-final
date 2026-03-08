@@ -15,7 +15,7 @@ class SaleParts_AI_Agent_API {
         register_rest_route('saleparts-ai/v1', '/log-question', [
             'methods' => 'POST',
             'callback' => [$this, 'log_question'],
-            'permission_callback' => '__return_true',
+            'permission_callback' => [$this, 'can_log_question'],
         ]);
     }
 
@@ -27,6 +27,15 @@ class SaleParts_AI_Agent_API {
         ]);
     }
 
+    public function can_log_question(WP_REST_Request $request): bool {
+        if (!is_user_logged_in()) {
+            return true;
+        }
+
+        $nonce = $request->get_header('X-WP-Nonce');
+        return is_string($nonce) && wp_verify_nonce($nonce, 'wp_rest') === 1;
+    }
+
     public function log_question(WP_REST_Request $request): WP_REST_Response {
         $question = sanitize_text_field((string) $request->get_param('question'));
         $ai_reply = sanitize_textarea_field((string) $request->get_param('aiReply'));
@@ -36,10 +45,15 @@ class SaleParts_AI_Agent_API {
             return new WP_REST_Response(['success' => false, 'message' => 'Question is required.'], 400);
         }
 
+        if (mb_strlen($question) > 600) {
+            return new WP_REST_Response(['success' => false, 'message' => 'Question is too long.'], 400);
+        }
+
         $user = wp_get_current_user();
         $user_role = 'guest';
         if ($user && !empty($user->roles)) {
-            $user_role = implode(',', array_map('sanitize_key', $user->roles));
+            $roles = array_filter(array_map('sanitize_key', $user->roles));
+            $user_role = !empty($roles) ? implode(',', $roles) : 'user';
         }
 
         global $wpdb;

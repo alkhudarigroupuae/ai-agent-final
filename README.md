@@ -27,6 +27,7 @@ Production-ready multi-component system for WooCommerce:
 - Generate improved descriptions and titles.
 - Suggest SEO keywords and categories.
 - Image enhancement helper endpoint and query generation for finding high-quality source images.
+- Client dashboard includes **Export Questions CSV** for reporting.
 
 ### Backend Endpoints
 - `POST /search-product`
@@ -89,6 +90,7 @@ npm run sync:products
 
 - WooCommerce keys and OpenAI credentials are environment variables only.
 - No secrets are hardcoded in plugin or backend files.
+- WordPress question logging uses REST nonce validation for authenticated users.
 - Use WooCommerce API keys with read-only or constrained permissions where possible.
 
 ## 6) Production Recommendations

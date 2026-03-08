@@ -207,6 +207,11 @@ class SaleParts_AI_Agent_Admin {
             <p>
                 <a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=saleparts-ai-agent-settings')); ?>">Open Integration Settings</a>
             </p>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin:0 0 16px;">
+                <input type="hidden" name="action" value="saleparts_ai_export_questions" />
+                <?php wp_nonce_field('saleparts_ai_export_questions'); ?>
+                <button type="submit" class="button">Export Questions CSV</button>
+            </form>
 
             <h2>Recent Customer Questions</h2>
             <table class="widefat striped">
@@ -249,5 +254,46 @@ class SaleParts_AI_Agent_Admin {
             <p>Run <code>npm run sync:products</code> in the backend folder to sync WooCommerce products into your vector database.</p>
         </div>
         <?php
+    }
+
+    public function handle_export_questions_csv(): void {
+        if (!current_user_can(self::SETTINGS_CAPABILITY) && !current_user_can('manage_options')) {
+            wp_die('You do not have permission to export question logs.');
+        }
+
+        check_admin_referer('saleparts_ai_export_questions');
+
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'saleparts_ai_questions';
+        if (!$this->question_table_exists($table)) {
+            wp_safe_redirect(admin_url('admin.php?page=saleparts-ai-agent-client'));
+            exit;
+        }
+
+        $rows = $wpdb->get_results("SELECT question, ai_reply, source_page, user_role, created_at FROM {$table} ORDER BY id DESC LIMIT 5000", ARRAY_A);
+
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=saleparts-question-logs-' . gmdate('Ymd-His') . '.csv');
+
+        $output = fopen('php://output', 'w');
+        if ($output === false) {
+            exit;
+        }
+
+        fputcsv($output, ['question', 'ai_reply', 'source_page', 'user_role', 'created_at']);
+        foreach ($rows as $row) {
+            fputcsv($output, [
+                $row['question'] ?? '',
+                $row['ai_reply'] ?? '',
+                $row['source_page'] ?? '',
+                $row['user_role'] ?? '',
+                $row['created_at'] ?? '',
+            ]);
+        }
+
+        fclose($output);
+        exit;
     }
 }
