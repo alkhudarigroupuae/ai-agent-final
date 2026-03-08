@@ -98,3 +98,47 @@ npm run sync:products
 - Store enhanced images in object storage (S3/Supabase Storage).
 - Add structured logging (Datadog/ELK) and uptime checks.
 - Add integration tests against staging WooCommerce data.
+
+## 7) GitHub Publishing Troubleshooting
+
+If `git push -u origin work` fails on your local machine, use this checklist:
+
+1. Ensure you are inside the repository directory:
+
+   ```bash
+   git rev-parse --show-toplevel
+   ```
+
+   If this command errors with `not a git repository`, run `cd` into the cloned project folder first.
+
+2. Verify the branch exists locally:
+
+   ```bash
+   git branch
+   ```
+
+   If `work` is missing, create it from your current state:
+
+   ```bash
+   git checkout -b work
+   ```
+
+3. Verify remote configuration:
+
+   ```bash
+   git remote -v
+   ```
+
+   If no `origin` exists, add it:
+
+   ```bash
+   git remote add origin https://github.com/alkhudarigroupuae/ecommerco.ai.git
+   ```
+
+4. Push the branch:
+
+   ```bash
+   git push -u origin work
+   ```
+
+5. If you see authentication errors, use a GitHub Personal Access Token (PAT) or switch to SSH remote authentication.
