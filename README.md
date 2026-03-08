@@ -142,3 +142,23 @@ If `git push -u origin work` fails on your local machine, use this checklist:
    ```
 
 5. If you see authentication errors, use a GitHub Personal Access Token (PAT) or switch to SSH remote authentication.
+
+
+## 8) Download Source Code (ZIP)
+
+If you want a downloadable source package (without `.git` history and local secrets), run:
+
+```bash
+bash scripts/create-source-zip.sh
+```
+
+This generates a ZIP file inside `dist/` named like:
+
+- `dist/saleparts-ai-agent-source-YYYYMMDD-HHMMSS.zip`
+
+The archive excludes:
+
+- `.git`
+- `node_modules`
+- local `.env` files
+- existing `dist` output
